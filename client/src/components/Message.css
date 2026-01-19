@@ -1,0 +1,32 @@
+.message {
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 15px;
+  max-width: 70%;
+  word-wrap: break-word;
+  display: flex;
+  flex-direction: column;
+}
+
+.message-username {
+  font-weight: bold;
+  margin-bottom: 4px;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.message-text {
+  font-size: 1em;
+}
+
+.current-user {
+  align-self: flex-end;
+  background-color: #dcf8c6;
+  color: #333;
+}
+
+.other-user {
+  align-self: flex-start;
+  background-color: #e0e0e0;
+  color: #333;
+}
