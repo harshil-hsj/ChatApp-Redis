@@ -4,7 +4,7 @@ dotenv.config();
 import express, { raw } from "express";
 import cors from "cors";
 const app = express();
-
+const port = 3001
 app.use(cors());
 
 app.use(express.json());
@@ -63,5 +63,9 @@ app.get("/api/chat/messages", async (req, res) => {
 
   res.json({ messages });
 
+});
+
+app.listen(port, () => {
+  console.log(`✅ Chat server running at http://localhost:${port}`);
 });
 
