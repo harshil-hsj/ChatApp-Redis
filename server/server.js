@@ -5,11 +5,7 @@ import express, { raw } from "express";
 import cors from "cors";
 const app = express();
 
-app.use(cors({
-  origin: "http://localhost:3000", // your frontend URL
-  methods: ["GET", "POST", "DELETE"]
-}));
-const port = 3001;
+app.use(cors());
 
 app.use(express.json());
 
