@@ -30,3 +30,10 @@
   background-color: #e0e0e0;
   color: #333;
 }
+
+.message-timestamp {
+  font-size: 0.7em;
+  color: #777;
+  margin-top: 4px;
+  align-self: flex-end;
+}

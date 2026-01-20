@@ -11,44 +11,65 @@ import '../styles/ChatRoomPage.css';
 const ChatRoomPage = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [lastTimestamp, setLastTimestamp] = useState(0);
   const username = localStorage.getItem('username');
+  const id = localStorage.getItem('id');
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    if (!username) {
+    if (!username || !id) {
       navigate('/');
       return;
     }
-    fetchMessages();
-    // Polling for new messages
-    const interval = setInterval(fetchMessages, 3000);
-    return () => clearInterval(interval);
-  }, [username, navigate]);
+  
+    const loadInitialMessages = async () => {
+      try {
+        console.log("ehh")
+        const response = await chatService.getMessages(0);
+        const msgs = response.data.messages;
+  
+        setMessages(msgs);
+  
+        if (msgs.length > 0) {
+          setLastTimestamp(msgs[msgs.length - 1].timestamp);
+        }
+      } catch (err) {
+        console.error("Initial fetch failed", err);
+      }
+    };
+  
+    loadInitialMessages();
+  }, [username, id]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (!lastTimestamp) return;
+  
+    const interval = setInterval(async () => {
+      try {
+        const response = await chatService.getMessages(lastTimestamp);
+        const newMessages = response.data.messages;
+        if (newMessages.length > 0) {
+          setMessages(prev => [...prev, ...newMessages]);
+          setLastTimestamp(newMessages[newMessages.length-1].timestamp);
+        }
+      } catch (err) {
+        console.error("Polling failed", err);
+      }
+    }, 1000);
+  
+    return () => clearInterval(interval);
+  }, [lastTimestamp]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const fetchMessages = async () => {
-    try {
-      const response = await chatService.getMessages();
-      setMessages(response.data);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-    }
-  };
-
   const handleSendMessage = async () => {
     if (newMessage.trim() && username) {
       try {
-        await chatService.postMessage({ username, message: newMessage.trim() });
+        await chatService.postMessage({ id, username, message: newMessage.trim() });
         setNewMessage('');
-        fetchMessages();
       } catch (error) {
         console.error('Error sending message:', error);
       }
@@ -61,12 +82,13 @@ const ChatRoomPage = () => {
         <h2>Chat Room - {username}</h2>
         <Button onClick={() => {
           localStorage.removeItem('username');
+          localStorage.removeItem('id');
           navigate('/');
         }}>Logout</Button>
       </HStack>
       <VStack className="messages-container">
         {messages.map((msg, index) => (
-          <Message key={index} username={msg.username} text={msg.message} isCurrentUser={msg.username === username} />
+          <Message key={index} username={msg.username} text={msg.message} isCurrentUser={msg.username === username && id === msg.id}  timestamp={new Date(msg.timestamp).toLocaleString()}/>
         ))}
         <div ref={messagesEndRef} />
       </VStack>

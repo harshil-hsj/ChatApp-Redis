@@ -13,6 +13,7 @@ const LoginPage = () => {
   const handleLogin = () => {
     if (username.trim()) {
       localStorage.setItem('username', username.trim());
+      localStorage.setItem('id', crypto.randomUUID());
       navigate('/chat');
     }
   };

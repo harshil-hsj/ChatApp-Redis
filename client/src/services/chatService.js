@@ -1,11 +1,15 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/messages';
+const API_URL = process.env.REACT_APP_BASE_URL;
 
-export const getMessages = () => {
-  return axios.get(API_URL);
+export const getMessages = async (after) => {
+  console.log("after"+after)
+  const res = await axios.get(`${API_URL}/api/chat/messages?after=${after?after:0}`);
+  return res
 };
 
-export const postMessage = (messageData) => {
-  return axios.post(API_URL, messageData);
+export const postMessage = async (messageData) => {
+  console.log(messageData)
+  const res = await axios.post(`${API_URL}/api/chat/send`, messageData);
+  return res;
 };

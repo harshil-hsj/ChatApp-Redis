@@ -1,9 +1,14 @@
 import {Redis} from "@upstash/redis";
 import dotenv from "dotenv";
 dotenv.config();
-import express from "express";
-
+import express, { raw } from "express";
+import cors from "cors";
 const app = express();
+
+app.use(cors({
+  origin: "http://localhost:3000", // your frontend URL
+  methods: ["GET", "POST", "DELETE"]
+}));
 const port = 3001;
 
 app.use(express.json());
@@ -20,47 +25,48 @@ const redis = new Redis({
 });
 
 app.post("/api/chat/send", async (req, res) => {
-  const { userName, message } = req.body;
+  const {id, username, message } = req.body;
 
-  if (!userName || !message) {
+  if (!username || !message) {
     return res.status(400).json({ error: "Invalid payload" });
   }
 
   const msg = {
-    id: crypto.randomUUID(),
-    userName,
+    id,
+    username,
     message,
     timestamp: Date.now(),
   };
-  // Check if key exists
-  const exists = await redis.exists(CHAT_KEY);
-
-  // Push message
-  await redis.lpush(CHAT_KEY, JSON.stringify(msg));
-
-  // If first message → set TTL
-  if (!exists) {
-    await redis.expire(CHAT_KEY, TTL_SECONDS);
-  }
-
+  
+  await redis.zadd(CHAT_KEY, {
+    score: msg.timestamp,
+    member: msg,
+  });
+  
+  await redis.zremrangebyscore(
+    CHAT_KEY,
+    0,
+    msg.timestamp - TTL_SECONDS * 1000
+  );
+  
   res.json({ ok: true });
 });
 
 
 app.get("/api/chat/messages", async (req, res) => {
 
-  const after = req.query.after || 0;
-
-  const rawMessages = await redis.lrange(CHAT_KEY, 0, -1);
-
-  if (rawMessages.length === 0) {
-    return res.json({ messages: [] });
-  }
-
-  const messages = rawMessages
-    .filter(m => m.timestamp > after);
+  const after = Number(req.query.after || 0);
+  const now = Date.now();
+  await redis.zremrangebyscore(
+    CHAT_KEY,
+    0,
+    now - TTL_SECONDS * 1000
+  );
+  
+  const messages = await redis.zrange(CHAT_KEY, after+1, "+inf", {byScore:true});
 
   res.json({ messages });
+
 });
 
 app.listen(port, () => {
