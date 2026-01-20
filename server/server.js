@@ -69,6 +69,3 @@ app.get("/api/chat/messages", async (req, res) => {
 
 });
 
-app.listen(port, () => {
-  console.log(`✅ Chat server running at http://localhost:${port}`);
-});
