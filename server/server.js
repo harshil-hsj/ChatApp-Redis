@@ -21,7 +21,7 @@ const redis = new Redis({
 });
 
 app.post("/api/chat/send", async (req, res) => {
-  const {id, username, message } = req.body;
+  const {id, username, message, timestamp } = req.body;
 
   if (!username || !message) {
     return res.status(400).json({ error: "Invalid payload" });
@@ -31,7 +31,7 @@ app.post("/api/chat/send", async (req, res) => {
     id,
     username,
     message,
-    timestamp: Date.now(),
+    timestamp
   };
   
   await redis.zadd(CHAT_KEY, {

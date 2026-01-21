@@ -25,7 +25,6 @@ const ChatRoomPage = () => {
   
     const loadInitialMessages = async () => {
       try {
-        console.log("ehh")
         const response = await chatService.getMessages(0);
         const msgs = response.data.messages;
   
@@ -68,7 +67,7 @@ const ChatRoomPage = () => {
   const handleSendMessage = async () => {
     if (newMessage.trim() && username) {
       try {
-        await chatService.postMessage({ id, username, message: newMessage.trim() });
+        await chatService.postMessage({ id, username, message: newMessage.trim(),timestamp:Date.now() });
         setNewMessage('');
       } catch (error) {
         console.error('Error sending message:', error);
