@@ -41,24 +41,50 @@ const ChatRoomPage = () => {
     loadInitialMessages();
   }, [username, id]);
 
+  // useEffect(() => {
+  //   if (!lastTimestamp) return;
+  
+  //   const interval = setInterval(async () => {
+  //     try {
+  //       const response = await chatService.getMessages(lastTimestamp);
+  //       const newMessages = response.data.messages;
+  //       if (newMessages.length > 0) {
+  //         setMessages(prev => [...prev, ...newMessages]);
+  //         setLastTimestamp(newMessages[newMessages.length-1].timestamp);
+  //       }
+  //     } catch (err) {
+  //       console.error("Polling failed", err);
+  //     }
+  //   }, 1000);
+  
+  //   return () => clearInterval(interval);
+  // }, [lastTimestamp]);
+
   useEffect(() => {
-    if (!lastTimestamp) return;
+    const es = new EventSource("http://localhost:3001/api/chat/stream");
   
-    const interval = setInterval(async () => {
-      try {
-        const response = await chatService.getMessages(lastTimestamp);
-        const newMessages = response.data.messages;
-        if (newMessages.length > 0) {
-          setMessages(prev => [...prev, ...newMessages]);
-          setLastTimestamp(newMessages[newMessages.length-1].timestamp);
+    es.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      setMessages(prev => {
+        if (
+          prev.some(m =>
+            m.id === msg.id &&
+            m.timestamp === msg.timestamp
+          )
+        ) {
+          return prev;
         }
-      } catch (err) {
-        console.error("Polling failed", err);
-      }
-    }, 1000);
+        return [...prev, msg];
+      });
+      
+    };
   
-    return () => clearInterval(interval);
-  }, [lastTimestamp]);
+    es.onerror = () => {
+      console.log("SSE disconnected, restablishing connection...");
+    };
+  
+    return () => es.close();
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
