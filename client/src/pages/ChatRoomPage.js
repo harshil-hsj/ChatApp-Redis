@@ -16,6 +16,8 @@ const ChatRoomPage = () => {
   const id = localStorage.getItem('id');
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
+  const API_URL = process.env.REACT_APP_BASE_URL;
+
 
   useEffect(() => {
     if (!username || !id) {
@@ -61,7 +63,7 @@ const ChatRoomPage = () => {
   // }, [lastTimestamp]);
 
   useEffect(() => {
-    const es = new EventSource("http://localhost:3001/api/chat/stream");
+    const es = new EventSource(`${API_URL}/api/chat/stream`);
   
     es.onmessage = (event) => {
       const msg = JSON.parse(event.data);
